@@ -1,0 +1,443 @@
+/* =========================================================
+   CryptoWatch — стили
+   Дизайн-концепция: тёмный «терминал» трейдера с тёплым
+   золотисто-янтарным акцентом (вместо избитой связки
+   чёрный + кислотно-зелёный) и живой бегущей строкой курсов
+   как главным акцентным элементом.
+   ========================================================= */
+
+/* ---------- Токены дизайна ---------- */
+:root {
+  /* Цвет */
+  --bg: #12151c;
+  --bg-elevated: #171b24;
+  --surface: #1a1f2b;
+  --surface-hover: #212736;
+  --border: #2a2f3d;
+  --border-strong: #3a4054;
+
+  --text-primary: #edeef2;
+  --text-secondary: #8a93a6;
+  --text-tertiary: #5c6478;
+
+  --accent: #e8a33d;
+  --accent-contrast: #17130a;
+  --positive: #4fae7c;
+  --positive-soft: rgba(79, 174, 124, 0.14);
+  --negative: #e2604f;
+  --negative-soft: rgba(226, 96, 79, 0.14);
+
+  /* Типографика */
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Manrope', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* Форма */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.28), 0 8px 20px -12px rgba(0, 0, 0, 0.5);
+  --shadow-card-hover: 0 6px 14px rgba(0, 0, 0, 0.32), 0 18px 40px -16px rgba(232, 163, 61, 0.22);
+
+  --transition-fast: 150ms ease;
+  --transition-medium: 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---------- Сброс и база ---------- */
+/* Явно даём [hidden] наивысший приоритет отображения,
+   чтобы он не конфликтовал по специфичности с .cards-grid,
+   .skeleton-grid и другими классами display:flex/grid ниже. */
+[hidden] { display: none !important; }
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; display: block; }
+button, input, select { font: inherit; color: inherit; }
+a { color: var(--accent); }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------- Бегущая строка (сигнатурный элемент) ---------- */
+.ticker {
+  overflow: hidden;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  padding: 10px 0;
+}
+
+.ticker__track {
+  display: inline-flex;
+  width: max-content;
+  animation: ticker-scroll 42s linear infinite;
+}
+
+.ticker:hover .ticker__track {
+  animation-play-state: paused;
+}
+
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 22px;
+  border-right: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.ticker-item__symbol { color: var(--text-secondary); font-weight: 600; }
+.ticker-item__price { color: var(--text-primary); }
+.ticker-item__change.is-positive { color: var(--positive); }
+.ticker-item__change.is-negative { color: var(--negative); }
+
+/* ---------- Заголовок ---------- */
+.page-header {
+  padding: 56px 24px 32px;
+  text-align: center;
+}
+
+.page-header__inner {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.page-header__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 14px;
+}
+
+.page-header__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  letter-spacing: -0.02em;
+  margin: 0 0 14px;
+}
+
+.page-header__title-accent { color: var(--accent); }
+
+.page-header__subtitle {
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ---------- Панель поиска и сортировки ---------- */
+.controls {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(18, 21, 28, 0.86);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.controls__inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 16px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.controls__search {
+  position: relative;
+  flex: 1 1 280px;
+}
+
+.controls__search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.controls__search-input {
+  width: 100%;
+  padding: 11px 14px 11px 42px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition-fast);
+}
+
+.controls__search-input:focus { border-color: var(--accent); }
+.controls__search-input::placeholder { color: var(--text-tertiary); }
+/* Убираем нативный крестик очистки в некоторых браузерах, у нас своя стилистика */
+.controls__search-input::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+.controls__sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.controls__sort-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.controls__sort-select {
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.controls__count {
+  margin: 0 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+/* ---------- Сетка карточек ---------- */
+.main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+.cards-grid,
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.coin-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+  animation: card-in var(--transition-medium) both;
+  transition:
+    transform var(--transition-medium),
+    border-color var(--transition-medium),
+    box-shadow var(--transition-medium),
+    background var(--transition-medium);
+}
+
+.coin-card:hover,
+.coin-card:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  background: var(--surface-hover);
+  box-shadow: var(--shadow-card-hover);
+}
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.coin-card__rank {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.coin-card__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-bottom: 12px;
+  background: var(--bg-elevated);
+}
+
+.coin-card__name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17px;
+  padding-right: 32px;
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.coin-card__symbol {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+}
+
+.coin-card__price {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 22px;
+  margin-top: 16px;
+}
+
+.coin-card__change {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.coin-card__change.is-positive { color: var(--positive); background: var(--positive-soft); }
+.coin-card__change.is-negative { color: var(--negative); background: var(--negative-soft); }
+
+.coin-card__cap {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* ---------- Скелетон-карточки (состояние загрузки) ---------- */
+.skeleton-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+}
+
+.skeleton-card__row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.skeleton {
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--border) 25%, var(--border-strong) 37%, var(--border) 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.5s ease infinite;
+}
+
+.skeleton--circle { width: 40px; height: 40px; border-radius: 50%; }
+.skeleton--rank { width: 26px; height: 12px; align-self: flex-start; }
+.skeleton--name { width: 68%; height: 16px; margin-bottom: 8px; }
+.skeleton--symbol { width: 38%; height: 11px; margin-bottom: 20px; }
+.skeleton--price { width: 55%; height: 20px; margin-bottom: 10px; }
+.skeleton--change { width: 34%; height: 14px; }
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* ---------- Состояния ошибки и пустого результата ---------- */
+.state-message {
+  text-align: center;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 80px 20px;
+}
+
+.state-message__icon {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 20px;
+  color: var(--text-tertiary);
+}
+
+.state-message__title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  margin: 0 0 8px;
+}
+
+.state-message__text {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+.btn-retry {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border: none;
+  padding: 11px 26px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform var(--transition-fast), filter var(--transition-fast);
+}
+
+.btn-retry:hover { filter: brightness(1.08); transform: translateY(-1px); }
+
+/* ---------- Подвал ---------- */
+.page-footer {
+  text-align: center;
+  padding: 24px;
+  border-top: 1px solid var(--border);
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+.page-footer a {
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ---------- Адаптивность ---------- */
+@media (max-width: 640px) {
+  .page-header { padding: 40px 20px 24px; }
+  .controls__inner { padding: 12px 16px; }
+  .controls__sort-label { display: none; }
+  .controls__count { flex-basis: 100%; margin-left: 0; }
+  .main { padding: 24px 16px 48px; }
+  .cards-grid, .skeleton-grid { grid-template-columns: 1fr; gap: 12px; }
+}
+
+@media (min-width: 641px) and (max-width: 920px) {
+  .cards-grid, .skeleton-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ---------- Уважаем настройку "меньше анимации" ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .ticker__track { animation: none; }
+  .coin-card { animation: none; }
+  .skeleton { animation: none; }
+  html { scroll-behavior: auto; }
+  * { transition-duration: 0.01ms !important; }
+}

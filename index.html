@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CryptoWatch — курсы криптовалют в реальном времени</title>
+  <meta name="description" content="Учебный проект: панель курсов криптовалют с живым поиском и сортировкой на клиенте. Данные — CoinGecko API.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Бегущая строка курсов — сигнатурный элемент дизайна.
+       Заполняется скриптом после успешной загрузки данных, поэтому изначально скрыта. -->
+  <div class="ticker" id="tickerWrap" hidden aria-hidden="true">
+    <div class="ticker__track" id="tickerTrack"></div>
+  </div>
+
+  <header class="page-header">
+    <div class="page-header__inner">
+      <p class="page-header__eyebrow">Учебный проект · Live-данные рынка</p>
+      <h1 class="page-header__title">Crypto<span class="page-header__title-accent">Watch</span></h1>
+      <p class="page-header__subtitle">
+        Курсы криптовалют в реальном времени с мгновенным поиском и сортировкой —
+        без перезагрузки страницы и повторных запросов к серверу.
+      </p>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="controls__inner">
+      <div class="controls__search">
+        <svg class="controls__search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          type="search"
+          id="searchInput"
+          class="controls__search-input"
+          placeholder="Поиск по названию или тикеру…"
+          aria-label="Поиск монеты по названию или тикеру"
+          autocomplete="off"
+        >
+      </div>
+
+      <div class="controls__sort">
+        <label for="sortSelect" class="controls__sort-label">Сортировка</label>
+        <select id="sortSelect" class="controls__sort-select" aria-label="Сортировка списка монет">
+          <option value="rank_asc" selected>По рейтингу</option>
+          <option value="price_desc">Цена: сначала дорогие</option>
+          <option value="price_asc">Цена: сначала дешёвые</option>
+          <option value="name_asc">Название: А → Я</option>
+          <option value="change_desc">Рост за 24ч</option>
+          <option value="change_asc">Падение за 24ч</option>
+        </select>
+      </div>
+
+      <p class="controls__count" id="resultsCount" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <main class="main">
+
+    <!-- Состояние загрузки: скелетон-карточки видны по умолчанию,
+         ещё до того как отработает JavaScript -->
+    <div class="skeleton-grid" id="loadingState">
+      <div class="skeleton-card"><div class="skeleton-card__row"><div class="skeleton skeleton--circle"></div><div class="skeleton skeleton--rank"></div></div><div class="skeleton skeleton--name"></div><div class="skeleton skeleton--symbol"></div><div class="skeleton skeleton--price"></div><div class="skeleton skeleton--change"></div></div>
+      <div class="skeleton-card"><div class="skeleton-card__row"><div class="skeleton skeleton--circle"></div><div class="skeleton skeleton--rank"></div></div><div class="skeleton skeleton--name"></div><div class="skeleton skeleton--symbol"></div><div class="skeleton skeleton--price"></div><div class="skeleton skeleton--change"></div></div>
+      <div class="skeleton-card"><div class="skeleton-card__row"><div class="skeleton skeleton--circle"></div><div class="skeleton skeleton--rank"></div></div><div class="skeleton skeleton--name"></div><div class="skeleton skeleton--symbol"></div><div class="skeleton skeleton--price"></div><div class="skeleton skeleton--change"></div></div>
+      <div class="skeleton-card"><div class="skeleton-card__row"><div class="skeleton skeleton--circle"></div><div class="skeleton skeleton--rank"></div></div><div class="skeleton skeleton--name"></div><div class="skeleton skeleton--symbol"></div><div class="skeleton skeleton--price"></div><div class="skeleton skeleton--change"></div></div>
+      <div class="skeleton-card"><div class="skeleton-card__row"><div class="skeleton skeleton--circle"></div><div class="skeleton skeleton--rank"></div></div><div class="skeleton skeleton--name"></div><div class="skeleton skeleton--symbol"></div><div class="skeleton skeleton--price"></div><div class="skeleton skeleton--change"></div></div>
+      <div class="skeleton-card"><div class="skeleton-card__row"><div class="skeleton skeleton--circle"></div><div class="skeleton skeleton--rank"></div></div><div class="skeleton skeleton--name"></div><div class="skeleton skeleton--symbol"></div><div class="skeleton skeleton--price"></div><div class="skeleton skeleton--change"></div></div>
+    </div>
+
+    <!-- Состояние ошибки -->
+    <div class="state-message" id="errorState" hidden>
+      <svg class="state-message__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 9v4"></path>
+        <path d="M12 17h.01"></path>
+        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path>
+      </svg>
+      <h2 class="state-message__title">Что-то пошло не так</h2>
+      <p class="state-message__text" id="errorMessageText">Не удалось загрузить данные.</p>
+      <button type="button" class="btn-retry" id="retryBtn">Повторить попытку</button>
+    </div>
+
+    <!-- Состояние «ничего не найдено» по поисковому запросу -->
+    <div class="state-message" id="emptyState" hidden>
+      <svg class="state-message__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="10" cy="10" r="6"></circle>
+        <line x1="20" y1="20" x2="14.65" y2="14.65"></line>
+        <line x1="7.5" y1="7.5" x2="12.5" y2="12.5"></line>
+        <line x1="12.5" y1="7.5" x2="7.5" y2="12.5"></line>
+      </svg>
+      <h2 class="state-message__title">Ничего не найдено</h2>
+      <p class="state-message__text">Попробуйте изменить или сократить поисковый запрос.</p>
+    </div>
+
+    <!-- Основная сетка карточек с монетами, наполняется через JS -->
+    <div class="cards-grid" id="cardsGrid" hidden></div>
+
+  </main>
+
+  <footer class="page-footer">
+    <p>
+      Данные предоставлены
+      <a href="https://www.coingecko.com" target="_blank" rel="noopener noreferrer">CoinGecko API</a>
+      · Учебный проект для портфолио, не является финансовой рекомендацией
+    </p>
+  </footer>
+
+  <noscript>Для работы этой страницы необходимо включить JavaScript.</noscript>
+  <script src="app.js"></script>
+</body>
+</html>
