@@ -1,6 +1,6 @@
 # Игнорируемые файлы по умолчанию
 /shelf/
-/workspace.xml
+/.idea/workspace.xml
 # HTTP-клиент на основе редактора
 /httpRequests/
 # Ignored default folder with query files
@@ -8,3 +8,4 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+.idea/
